@@ -1,4 +1,4 @@
-const Pusher = require('pusher-js');
+const PusherClient = require('pusher-js/node');
 const fetch = require('node-fetch');
 
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
@@ -9,7 +9,7 @@ console.log('🚀 ChatApp Bridge запускается...');
 console.log('License ID:', LICENSE_ID);
 console.log('N8N Webhook:', N8N_WEBHOOK);
 
-const pusher = new Pusher('ChatsAppApiProdKey', {
+const pusher = new PusherClient('ChatsAppApiProdKey', {
   wsHost: 'socket.chatapp.online',
   wssPort: 6001,
   disableStats: true,
@@ -28,7 +28,7 @@ pusher.connection.bind('connected', () => {
 });
 
 pusher.connection.bind('error', (err) => {
-  console.error('❌ Ошибка подключения:', err);
+  console.error('❌ Ошибка подключения:', JSON.stringify(err));
 });
 
 const channel = pusher.subscribe(`private-v1.licenses.${LICENSE_ID}.messengers.caWhatsApp`);
@@ -38,28 +38,27 @@ channel.bind('pusher:subscription_succeeded', () => {
 });
 
 channel.bind('pusher:subscription_error', (err) => {
-  console.error('❌ Ошибка подписки на канал:', err);
+  console.error('❌ Ошибка подписки:', JSON.stringify(err));
 });
 
 channel.bind('message', async (data) => {
   try {
     const messages = data.data;
     for (const msg of messages) {
-      // Пропускаем исходящие (от бота/оператора)
       if (msg.fromMe) {
-        console.log('⏩ Пропускаем исходящее сообщение');
+        console.log('⏩ Пропускаем исходящее');
         continue;
       }
 
-      console.log('📨 Входящее сообщение от:', msg.chat?.phone, '| Текст:', msg.message?.text);
+      console.log('📨 Входящее от:', msg.chat?.phone, '| Текст:', msg.message?.text);
 
       const payload = {
-        chatId:   msg.chat?.id,
-        phone:    msg.chat?.phone,
-        name:     msg.chat?.name,
-        text:     msg.message?.text,
-        time:     msg.time,
-        msgId:    msg.id,
+        chatId:    msg.chat?.id,
+        phone:     msg.chat?.phone,
+        name:      msg.chat?.name,
+        text:      msg.message?.text,
+        time:      msg.time,
+        msgId:     msg.id,
         licenseId: LICENSE_ID
       };
 
@@ -72,11 +71,10 @@ channel.bind('message', async (data) => {
       console.log('✅ Отправлено в n8n, статус:', response.status);
     }
   } catch (err) {
-    console.error('❌ Ошибка при обработке сообщения:', err);
+    console.error('❌ Ошибка:', err.message);
   }
 });
 
-// Keepalive чтобы Railway не останавливал процесс
 setInterval(() => {
-  console.log('💓 Heartbeat — мост работает,', new Date().toISOString());
+  console.log('💓 Heartbeat —', new Date().toISOString());
 }, 30000);
