@@ -1,0 +1,12 @@
+{
+  "name": "chatapp-bridge",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "pusher-js": "^8.3.0",
+    "node-fetch": "^2.7.0"
+  }
+}
