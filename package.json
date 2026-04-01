@@ -6,7 +6,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "pusher-js": "^8.3.0",
+    "pusher-js": "4.4.0",
     "node-fetch": "^2.7.0"
   },
   "engines": {
